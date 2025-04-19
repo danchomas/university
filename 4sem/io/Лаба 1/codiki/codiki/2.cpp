@@ -1,0 +1,188 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <limits>
+#include <cmath>
+#include <iomanip>
+
+using namespace std;
+
+// Точность для сравнения чисел с плавающей точкой
+const double EPS = 1e-9;
+
+// Функция для приведения матрицы к ступенчато-улучшенной форме методом Гаусса-Жордана
+void gauss_jordan(vector<vector<double>>& matrix) {
+    int rows = matrix.size();    // Количество строк в матрице (уравнений)
+    int cols = matrix[0].size(); // Количество столбцов в матрице (переменные + свободные члены)
+
+    // Проходим по каждой строке матрицы
+    for (int r = 0; r < rows; r++) {
+        // Если ведущий элемент близок к нулю, ищем строку ниже с ненулевым элементом
+        if (abs(matrix[r][r]) < EPS) {
+            for (int i = r + 1; i < rows; i++) {
+                if (abs(matrix[i][r]) > EPS) {
+                    swap(matrix[r], matrix[i]); // Меняем строки местами
+                    break;
+                }
+            }
+        }
+
+        // Если ведущий элемент ненулевой, нормируем строку
+        if (abs(matrix[r][r]) > EPS) {
+            double div = matrix[r][r]; // Делим всю строку на ведущий элемент
+            for (int j = r; j < cols; j++) {
+                matrix[r][j] /= div;
+            }
+        }
+
+        // Обнуляем элементы выше и ниже ведущего элемента
+        for (int i = 0; i < rows; i++) {
+            if (i != r && abs(matrix[i][r]) > EPS) {
+                double mult = matrix[i][r]; // Коэффициент для обнуления
+                for (int j = r; j < cols; j++) {
+                    matrix[i][j] -= mult * matrix[r][j]; // Вычитаем строку r из строки i
+                }
+            }
+        }
+    }
+}
+
+// Функция для проверки, является ли решение допустимым (все переменные >= 0)
+bool is_feasible(const vector<double>& solution) {
+    for (double x : solution) {
+        if (x < -EPS) return false; // Если переменная отрицательная, решение недопустимо
+    }
+    return true;
+}
+
+// Пример целевой функции (можно заменить на любую другую)
+double objective_function(const vector<double>& solution) {
+    // Пример: 3x1 + 2x2 - 5x3 + 4x4 - x5
+    return 3 * solution[0] + 2 * solution[1] - 5 * solution[2] + 4 * solution[3] - solution[4];
+}
+
+// Функция для форматированного вывода чисел с подавлением шума
+void print_number(double num) {
+    if (abs(num) < 1e-7) num = 0.0; // Обнуляем малые значения
+    cout << fixed << setprecision(4) << num << " "; // Выводим с точностью до 4 знаков
+}
+
+// Основная функция для поиска и вывода всех опорных планов и оптимального решения
+void find_optimal_plan(vector<vector<double>>& matrix) {
+    int rows = matrix.size();    // Количество строк в матрице
+    int cols = matrix[0].size(); // Количество столбцов в матрице
+
+    // Приводим матрицу к ступенчато-улучшенной форме
+    gauss_jordan(matrix);
+
+    // Определяем базисные и свободные переменные
+    vector<int> basic_vars, free_vars;
+    for (int r = 0; r < rows; r++) {
+        for (int c = 0; c < cols - 1; c++) {
+            if (abs(matrix[r][c] - 1.0) < EPS) {
+                bool is_basic = true;
+                // Проверяем, является ли переменная базисной
+                for (int i = 0; i < rows; i++) {
+                    if (i != r && abs(matrix[i][c]) > EPS) {
+                        is_basic = false;
+                        break;
+                    }
+                }
+                if (is_basic) {
+                    basic_vars.push_back(c); // Добавляем индекс базисной переменной
+                    break;
+                }
+            }
+        }
+    }
+
+    // Определяем свободные переменные (не входящие в базис)
+    for (int c = 0; c < cols - 1; c++) {
+        if (find(basic_vars.begin(), basic_vars.end(), c) == basic_vars.end()) {
+            free_vars.push_back(c); // Добавляем индекс свободной переменной
+        }
+    }
+
+    // Генерация всех возможных базисных решений
+    vector<vector<double>> all_solutions;
+    for (int i = 0; i < (1 << free_vars.size()); i++) {
+        vector<double> solution(cols - 1, 0.0); // Инициализируем решение нулями
+        // Устанавливаем значения свободных переменных (0 или 1)
+        for (int j = 0; j < free_vars.size(); j++) {
+            solution[free_vars[j]] = (i & (1 << j)) ? 1.0 : 0.0;
+        }
+
+        // Вычисляем значения базисных переменных
+        for (int r = 0; r < rows; r++) {
+            for (int c : basic_vars) {
+                if (abs(matrix[r][c] - 1.0) < EPS) {
+                    solution[c] = matrix[r][cols - 1]; // Значение из правой части
+                    for (int f : free_vars) {
+                        solution[c] -= matrix[r][f] * solution[f]; // Вычитаем вклад свободных переменных
+                    }
+                    break;
+                }
+            }
+        }
+        all_solutions.push_back(solution); // Добавляем решение в список
+    }
+
+    // Отбор допустимых решений (все переменные >= 0)
+    vector<vector<double>> feasible_solutions;
+    for (const auto& sol : all_solutions) {
+        if (is_feasible(sol)) {
+            feasible_solutions.push_back(sol); // Добавляем допустимое решение
+        }
+    }
+
+    // Вывод всех опорных планов
+    cout << "Все опорные планы:\n";
+    for (size_t i = 0; i < feasible_solutions.size(); ++i) {
+        cout << "План " << i + 1 << ": ";
+        for (double x : feasible_solutions[i]) {
+            print_number(x); // Выводим значения переменных
+        }
+        double obj_val = objective_function(feasible_solutions[i]); // Вычисляем значение целевой функции
+        cout << "\tЦФ: " << obj_val << "\n"; // Выводим значение целевой функции
+    }
+
+    // Проверка наличия допустимых решений
+    if (feasible_solutions.empty()) {
+        cout << "\nДопустимые решения отсутствуют!\n";
+        return;
+    }
+
+    // Поиск оптимального решения (с минимальным значением целевой функции)
+    double min_value = numeric_limits<double>::max(); // Инициализируем минимальное значение
+    vector<double> optimal_solution;
+    for (const auto& sol : feasible_solutions) {
+        double current = objective_function(sol); // Вычисляем значение целевой функции
+        if (current < min_value) {
+            min_value = current; // Обновляем минимальное значение
+            optimal_solution = sol; // Запоминаем оптимальное решение
+        }
+    }
+
+    // Вывод оптимального решения
+    cout << "\nОптимальный опорный план:\n";
+    for (double x : optimal_solution) {
+        print_number(x); // Выводим значения переменных
+    }
+    cout << "\nЗначение целевой функции: " << min_value << "\n"; // Выводим значение целевой функции
+}
+
+int main() {
+    setlocale(LC_ALL, "Russian"); 
+
+    // Расширенная матрица системы уравнений
+    vector<vector<double>> matrix = {
+        {-1, 5, -4, -6, 0, 1, -9},
+        {8, 1, -1, 0, 2, 3, 8},
+        {4, 3, -2, 9, 1, 7, 1}
+    };
+
+    // Поиск и вывод всех опорных планов и оптимального решения
+    find_optimal_plan(matrix);
+
+    return 0;
+}

@@ -1,0 +1,4 @@
+﻿  simplex.cpp
+E:\4 сем\исслоп\Лаба 2\codiki\codiki\simplex.cpp(20,19): warning C4267: =: преобразование из "size_t" в "int"; возможна потеря данных
+E:\4 сем\исслоп\Лаба 2\codiki\codiki\simplex.cpp(37,23): warning C4267: =: преобразование из "size_t" в "int"; возможна потеря данных
+  codiki.vcxproj -> E:\4 сем\исслоп\Лаба 2\codiki\x64\Debug\codiki.exe

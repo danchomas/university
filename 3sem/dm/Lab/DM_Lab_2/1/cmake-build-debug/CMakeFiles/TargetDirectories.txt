@@ -1,0 +1,3 @@
+D:/ALL/Institute/2course3semester/DM/Lab/DM_Lab_2/1/cmake-build-debug/CMakeFiles/1.dir
+D:/ALL/Institute/2course3semester/DM/Lab/DM_Lab_2/1/cmake-build-debug/CMakeFiles/edit_cache.dir
+D:/ALL/Institute/2course3semester/DM/Lab/DM_Lab_2/1/cmake-build-debug/CMakeFiles/rebuild_cache.dir

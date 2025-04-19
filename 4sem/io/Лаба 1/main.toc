@@ -1,0 +1,5 @@
+\babel@toc {russian}{}\relax 
+\contentsline {chapter}{Лабораторная работа №1 <<Исследование множества опорных планов системы ограничений задачи линейного программирования (задачи ЛП) в канонической форме.>>}{1}{chapter*.1}%
+\contentsline {chapter}{Блок-схема программы}{2}{chapter*.2}%
+\contentsline {chapter}{Код программы}{3}{chapter*.4}%
+\contentsline {chapter}{Аналитическое решение}{11}{chapter*.8}%

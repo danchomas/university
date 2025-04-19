@@ -1,0 +1,41 @@
+"C:\Program Files\JetBrains\CLion 2022.2\bin\cmake\win\bin\cmake.exe" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=C:/Program Files/JetBrains/CLion 2022.2/bin/ninja/win/ninja.exe" -G Ninja -S \\THINKPAD-T490\krabik\2course3semester\DM\Lab\DM_Lab_8\1 -B \\THINKPAD-T490\krabik\2course3semester\DM\Lab\DM_Lab_8\1\cmake-build-debug
+-- The C compiler identification is GNU 11.2.0
+-- The CXX compiler identification is GNU 11.2.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - failed
+-- Check for working C compiler: C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/gcc.exe
+-- Check for working C compiler: C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/gcc.exe - broken
+CMake Error at C:/Program Files/JetBrains/CLion 2022.2/bin/cmake/win/share/cmake-3.23/Modules/CMakeTestCCompiler.cmake:69 (message):
+  The C compiler
+
+    "C:/Program Files/JetBrains/CLion 2022.2/bin/mingw/bin/gcc.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: //THINKPAD-T490/krabik/2course3semester/DM/Lab/DM_Lab_8/1/cmake-build-debug/CMakeFiles/CMakeTmp
+    
+    Run Build Command(s):C:/Program Files/JetBrains/CLion 2022.2/bin/ninja/win/ninja.exe cmTC_9e9d2 && [1/2] Building C object CMakeFiles/cmTC_9e9d2.dir/testCCompiler.c.obj
+    [2/2] Linking C executable cmTC_9e9d2.exe
+    FAILED: cmTC_9e9d2.exe 
+    cmd.exe /C "cd . && C:\PROGRA~1\JETBRA~1\CLION2~1.2\bin\mingw\bin\gcc.exe   CMakeFiles/cmTC_9e9d2.dir/testCCompiler.c.obj -o cmTC_9e9d2.exe -Wl,--out-implib,libcmTC_9e9d2.dll.a -Wl,--major-image-version,0,--minor-image-version,0  -lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 && cd ."
+    "\\THINKPAD-T490\krabik\2course3semester\DM\Lab\DM_Lab_8\1\cmake-build-debug\CMakeFiles\CMakeTmp"
+    Указанный путь был использован при запуске CMD.EXE в качестве текущей папки.
+    CMD.EXE не поддерживает пути UNC. По умолчанию выбрана системная папка Windows.
+    C:\Program Files\JetBrains\CLion 2022.2\bin\mingw\bin/ld.exe: cannot open output file cmTC_9e9d2.exe: Permission denied
+    collect2.exe: error: ld returned 1 exit status
+    ninja: build stopped: subcommand failed.
+    
+    
+
+  
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  CMakeLists.txt:2 (project)
+
+
+-- Configuring incomplete, errors occurred!
+See also "//THINKPAD-T490/krabik/2course3semester/DM/Lab/DM_Lab_8/1/cmake-build-debug/CMakeFiles/CMakeOutput.log".
+See also "//THINKPAD-T490/krabik/2course3semester/DM/Lab/DM_Lab_8/1/cmake-build-debug/CMakeFiles/CMakeError.log".

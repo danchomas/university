@@ -1,0 +1,67 @@
+@startuml
+
+class User {
+  - name : String
+  - email : String
+  + addProductToCart(Product) : void
+  + requestPurchaseAnalysis() : void
+  + getAnalysisResult() : Map<Store, double>
+}
+
+class Cart {
+  - productList : List<Product>
+  + addProduct(Product) : void
+  + removeProduct(Product) : void
+  + getProductList() : List<Product>
+}
+
+class Product {
+  - name : String
+  - price : double
+  - discount : Discount
+  + getName() : String
+  + getPrice() : double
+  + getDiscount() : Discount
+}
+
+class Discount {
+  - percentage : double
+  - description : String
+  + getPercentage() : double
+  + getDescription() : String
+}
+
+class Store {
+  - name : String
+  - productList : List<Product>
+  + getName() : String
+  + getProductPrice(Product) : double
+  + getProductList() : List<Product>
+}
+
+class PurchaseAnalysis {
+  - cart : Cart
+  - storeList : List<Store>
+  + analyzePrices() : Map<Store, double>
+}
+
+class Calculation {
+  - purchaseAnalysis : PurchaseAnalysis
+  + calculateBenefit() : Map<Store, double>
+}
+
+' Ассоциации
+User "1" --> "1" Cart : uses
+Product "1" --> "0..1" Discount : may have
+Product "1" --> "1..*" Store : sold in
+Store "1" --> "0..*" PurchaseAnalysis : provides data
+
+' Агрегация
+Cart "1" o--> "0..*" Product : contains
+
+' Композиция
+PurchaseAnalysis "1" *--> "1" Cart : analyzes
+PurchaseAnalysis "1" *--> "0..*" Store : uses data
+Calculation "1" *--> "1" PurchaseAnalysis : uses data
+
+@enduml
