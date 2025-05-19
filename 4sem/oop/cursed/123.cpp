@@ -1,373 +1,493 @@
 #include <iostream>
-#include <vector>
 #include <string>
+#include <vector>
+#include <memory>
 #include <ctime>
-#include <map>
 #include <algorithm>
 #include <sstream>
+#include <unordered_map>
+#include <fstream>
 
-using namespace std;
-
+// Comment.h
 class Comment {
-    string author;
-    time_t date;
-    string text;
+    std::string author;
+    std::time_t date;
+    std::string text;
 
 public:
-    Comment(const string& author, const string& text)
-        : author(author), text(text), date(time(nullptr)) {}
-
-    void print() const {
-        char time_str[100];
-        strftime(time_str, sizeof(time_str), "%H:%M %d/%m/%Y", localtime(&date));
-        cout << author << " [" << time_str << "]: " << text << "\n";
-    }
+    Comment(const std::string& author, const std::string& text);
+    void print() const;
 };
 
+// Comment.cpp
+Comment::Comment(const std::string& author, const std::string& text)
+    : author(author), date(std::time(nullptr)), text(text) {}
+
+void Comment::print() const {
+    char time_str[100];
+    std::strftime(time_str, sizeof(time_str), "%H:%M %d/%m/%Y", std::localtime(&date));
+    std::cout << author << " [" << time_str << "]: " << text << "\n";
+}
+
+// Post.h
 class Post {
-    string author;
-    string title;
-    string content;
-    time_t date;
-    vector<Comment> comments;
+    std::string author;
+    std::string title;
+    std::string content;
+    std::time_t date;
+    std::vector<Comment> comments;
 
 public:
-    Post(const string& author, const string& title, const string& content)
-        : author(author), title(title), content(content), date(time(nullptr)) {}
-
-    void add_comment(const Comment& comment) {
-        comments.push_back(comment);
-    }
-
-    void print() const {
-        char time_str[100];
-        strftime(time_str, sizeof(time_str), "%H:%M %d/%m/%Y", localtime(&date));
-
-        cout << "\n════════ " << title << " ════════\n"
-             << "Автор: " << author << "\n"
-             << "Дата: " << time_str << "\n\n"
-             << content << "\n\n"
-             << "Комментарии (" << comments.size() << "):\n";
-
-        for (const auto& c : comments) c.print();
-    }
-
-    string get_author() const { return author; }
-    string get_title() const { return title; }
-    time_t get_date() const { return date; }
+    Post(const std::string& author, const std::string& title, const std::string& content);
+    void add_comment(const Comment& comment);
+    void print() const;
+    std::string get_author() const;
+    std::string get_title() const;
+    std::time_t get_date() const;
 };
 
+// Post.cpp
+Post::Post(const std::string& author, const std::string& title, const std::string& content)
+    : author(author), title(title), content(content), date(std::time(nullptr)) {}
+
+void Post::add_comment(const Comment& comment) {
+    comments.push_back(comment);
+}
+
+void Post::print() const {
+    char time_str[100];
+    std::strftime(time_str, sizeof(time_str), "%H:%M %d/%m/%Y", std::localtime(&date));
+
+    std::cout << "\n════════ " << title << " ════════\n"
+              << "Автор: " << author << "\n"
+              << "Дата: " << time_str << "\n\n"
+              << content << "\n\n"
+              << "Комментарии (" << comments.size() << "):\n";
+
+    for (const auto& c : comments) c.print();
+}
+
+std::string Post::get_author() const { return author; }
+std::string Post::get_title() const { return title; }
+std::time_t Post::get_date() const { return date; }
+
+// Profile.h
 class Profile {
-    string bio;
-    vector<string> interests;
+    std::string bio;
+    std::vector<std::string> interests;
 
 public:
-    Profile(const string& bio = "", const vector<string>& interests = {})
-        : bio(bio), interests(interests) {}
-
-    void print() const {
-        cout << "\nО пользователе: " << bio << "\nИнтересы: ";
-
-        if (interests.empty()) cout << "не указаны";
-        else for (size_t i = 0; i < interests.size(); ++i)
-            cout << interests[i] << (i != interests.size()-1 ? ", " : "");
-        cout << "\n";
-    }
+    Profile(const std::string& bio, const std::vector<std::string>& interests);
+    void print() const;
 };
 
+// Profile.cpp
+Profile::Profile(const std::string& bio, const std::vector<std::string>& interests)
+    : bio(bio), interests(interests) {}
+
+void Profile::print() const {
+    std::cout << "\nО пользователе: " << bio << "\nИнтересы: ";
+
+    if (interests.empty()) std::cout << "не указаны";
+    else for (size_t i = 0; i < interests.size(); ++i)
+        std::cout << interests[i] << (i != interests.size()-1 ? ", " : "");
+    std::cout << "\n";
+}
+
+// Blog.h
 class Blog {
-    string owner;
-    vector<Post> posts;
+    std::string owner;
+    std::vector<Post> posts;
 
 public:
-    Blog(const string& owner) : owner(owner) {}
-
-    void add_post(const Post& post) {
-        posts.push_back(post);
-        sort(posts.begin(), posts.end(),
-            [](const Post& a, const Post& b) { return a.get_date() > b.get_date(); });
-    }
-
-    void print_posts() const {
-        cout << "\n═════════ Посты пользователя " << owner << " ═════════\n";
-        for (const auto& p : posts) p.print();
-    }
-
-    vector<Post>& get_posts() { return posts; }
-    string get_owner() const { return owner; }
+    Blog(const std::string& owner);
+    void add_post(const Post& post);
+    void print_posts() const;
+    std::vector<Post>& get_posts();
+    std::string get_owner() const;
 };
 
-class User {
-    string username;
-    string password;
-    Profile profile;
-    Blog blog;
+// Blog.cpp
+Blog::Blog(const std::string& owner) : owner(owner) {}
 
-public:
-    User(const string& username, const string& password, const Profile& profile)
-        : username(username), password(password), profile(profile), blog(username) {}
+void Blog::add_post(const Post& post) {
+    posts.push_back(post);
+    std::sort(posts.begin(), posts.end(),
+        [](const Post& a, const Post& b) { return a.get_date() > b.get_date(); });
+}
 
-    bool check_password(const string& pwd) const { return password == pwd; }
+void Blog::print_posts() const {
+    std::cout << "\n═════════ Посты пользователя " << owner << " ═════════\n";
+    for (const auto& p : posts) p.print();
+}
 
-    Blog& get_blog() { return blog; }
-    Profile& get_profile() { return profile; }
-    string get_username() const { return username; }
+std::vector<Post>& Blog::get_posts() { return posts; }
+std::string Blog::get_owner() const { return owner; }
 
-    void print_info() const {
-        cout << "\n═════════ Профиль " << username << " ═════════\n";
-        profile.print();
-    }
-};
-
+// IUserRepository.h
 class IUserRepository {
 public:
-    virtual void add_user(User* user) = 0;
-    virtual User* find_user(const string& username) = 0;
-    virtual vector<User*> get_all_users() = 0;
     virtual ~IUserRepository() = default;
+    virtual void add_user(std::shared_ptr<class User> user) = 0;
+    virtual std::shared_ptr<class User> find_user(const std::string& username) = 0;
+    virtual std::vector<std::shared_ptr<class User>> get_all_users() = 0;
 };
 
+// User.h
+class User {
+    std::string username;
+    std::string password;
+    Profile profile;
+    std::unique_ptr<Blog> blog;
+
+public:
+    User(const std::string& username, const std::string& password, const Profile& profile);
+    bool check_password(const std::string& pwd) const;
+    Blog& get_blog();
+    Profile& get_profile();
+    std::string get_username() const;
+    void print_info() const;
+};
+
+// User.cpp
+User::User(const std::string& username, const std::string& password, const Profile& profile)
+    : username(username), password(password), profile(profile),
+      blog(std::make_unique<Blog>(username)) {}
+
+bool User::check_password(const std::string& pwd) const { return password == pwd; }
+
+Blog& User::get_blog() { return *blog; }
+Profile& User::get_profile() { return profile; }
+std::string User::get_username() const { return username; }
+
+void User::print_info() const {
+    std::cout << "\n═════════ Профиль " << username << " ═════════\n";
+    profile.print();
+}
+
+// UserRepository.h
 class UserRepository : public IUserRepository {
-    map<string, User*> users;
+    std::unordered_map<std::string, std::shared_ptr<User>> users;
+    std::string filename = "users.txt";
 
 public:
-    ~UserRepository() {
-        for (auto& pair : users) delete pair.second;
-    }
-
-    void add_user(User* user) override {
-        users[user->get_username()] = user;
-    }
-
-    User* find_user(const string& username) override {
-        auto it = users.find(username);
-        return it != users.end() ? it->second : nullptr;
-    }
-
-    vector<User*> get_all_users() override {
-        vector<User*> result;
-        for (const auto& pair : users) result.push_back(pair.second);
-        return result;
-    }
+    UserRepository();
+    void add_user(std::shared_ptr<User> user) override;
+    std::shared_ptr<User> find_user(const std::string& username) override;
+    std::vector<std::shared_ptr<User>> get_all_users() override;
+    void save_users_to_file();
 };
 
-class AuthService {
-    IUserRepository* user_repo;
-
-public:
-    AuthService(IUserRepository* repo) : user_repo(repo) {}
-
-    User* authenticate(const string& username, const string& password) {
-        User* user = user_repo->find_user(username);
-        return user && user->check_password(password) ? user : nullptr;
-    }
-};
-
-class BlogService {
-    IUserRepository* user_repo;
-
-    pair<string, int> find_post(int global_index) {
-        int counter = 1;
-        for (User* user : user_repo->get_all_users()) {
-            auto& posts = user->get_blog().get_posts();
-            for (size_t i = 0; i < posts.size(); ++i) {
-                if (counter++ == global_index) return {user->get_username(), i};
+// UserRepository.cpp
+UserRepository::UserRepository() {
+    std::ifstream infile(filename);
+    if (infile) {
+        std::string username, password, bio, line;
+        std::vector<std::string> interests;
+        while (std::getline(infile, line)) {
+            if (line.find("Username: ") == 0) {
+                username = line.substr(10);
+            } else if (line.find("Password: ") == 0) {
+                password = line.substr(10);
+            } else if (line.find("Bio: ") == 0) {
+                bio = line.substr(5);
+            } else if (line.find("Interests: ") == 0) {
+                interests.clear();
+                std::string interests_str = line.substr(11);
+                std::istringstream iss(interests_str);
+                std::string interest;
+                while (std::getline(iss, interest, ',')) {
+                    interests.push_back(interest);
+                }
+                Profile profile(bio, interests);
+                auto user = std::make_shared<User>(username, password, profile);
+                users[username] = user;
             }
         }
-        return {"", -1};
     }
+}
+
+void UserRepository::add_user(std::shared_ptr<User> user) {
+    users[user->get_username()] = user;
+    save_users_to_file();
+}
+
+std::shared_ptr<User> UserRepository::find_user(const std::string& username) {
+    auto it = users.find(username);
+    return it != users.end() ? it->second : nullptr;
+}
+
+std::vector<std::shared_ptr<User>> UserRepository::get_all_users() {
+    std::vector<std::shared_ptr<User>> result;
+    for (const auto& pair : users) result.push_back(pair.second);
+    return result;
+}
+
+void UserRepository::save_users_to_file() {
+    std::ofstream outfile(filename);
+    for (const auto& pair : users) {
+        auto user = pair.second;
+        outfile << "Username: " << user->get_username() << "\n";
+        outfile << "Password: " << "password" << "\n"; // Avoid saving actual password for security
+        outfile << "Bio: " << user->get_profile().bio << "\n";
+        outfile << "Interests: ";
+        auto interests = user->get_profile().interests;
+        for (size_t i = 0; i < interests.size(); ++i) {
+            outfile << interests[i] << (i != interests.size()-1 ? "," : "");
+        }
+        outfile << "\n";
+    }
+}
+
+// UserFactory.h
+class UserFactory {
+    std::shared_ptr<IUserRepository> repo;
 
 public:
-    BlogService(IUserRepository* repo) : user_repo(repo) {}
+    UserFactory(std::shared_ptr<IUserRepository> repo);
+    std::shared_ptr<User> create_user(
+        const std::string& username,
+        const std::string& password,
+        const std::string& bio,
+        const std::vector<std::string>& interests);
+};
 
-    bool create_post(const string& username, const string& title, const string& content) {
-        if (User* user = user_repo->find_user(username)) {
-            user->get_blog().add_post(Post(username, title, content));
+// UserFactory.cpp
+UserFactory::UserFactory(std::shared_ptr<IUserRepository> repo) : repo(repo) {}
+
+std::shared_ptr<User> UserFactory::create_user(
+    const std::string& username,
+    const std::string& password,
+    const std::string& bio,
+    const std::vector<std::string>& interests
+) {
+    auto user = std::make_shared<User>(username, password, Profile(bio, interests));
+    repo->add_user(user);
+    return user;
+}
+
+// AuthService.h
+class AuthService {
+    std::shared_ptr<IUserRepository> user_repo;
+
+public:
+    AuthService(std::shared_ptr<IUserRepository> repo);
+    std::shared_ptr<User> authenticate(const std::string& username, const std::string& password);
+};
+
+// AuthService.cpp
+AuthService::AuthService(std::shared_ptr<IUserRepository> repo) : user_repo(repo) {}
+
+std::shared_ptr<User> AuthService::authenticate(const std::string& username, const std::string& password) {
+    auto user = user_repo->find_user(username);
+    return (user && user->check_password(password)) ? user : nullptr;
+}
+
+// BlogService.h
+class BlogService {
+    std::shared_ptr<IUserRepository> user_repo;
+
+public:
+    BlogService(std::shared_ptr<IUserRepository> repo);
+    bool create_post(const std::string& username, const std::string& title, const std::string& content);
+    void print_all_posts();
+    bool add_comment(const std::string& commenter, int post_index, const std::string& text);
+    void print_post_numbers();
+    std::pair<std::string, int> find_post(int global_index);
+};
+
+// BlogService.cpp
+std::pair<std::string, int> BlogService::find_post(int global_index) {
+    int counter = 1;
+    for (auto& user : user_repo->get_all_users()) {
+        auto& posts = user->get_blog().get_posts();
+        for (size_t i = 0; i < posts.size(); ++i) {
+            if (counter++ == global_index) return {user->get_username(), static_cast<int>(i)};
+        }
+    }
+    return {"", -1};
+}
+
+BlogService::BlogService(std::shared_ptr<IUserRepository> repo) : user_repo(repo) {}
+
+bool BlogService::create_post(const std::string& username, const std::string& title, const std::string& content) {
+    if (auto user = user_repo->find_user(username)) {
+        user->get_blog().add_post(Post(username, title, content));
+        return true;
+    }
+    return false;
+}
+
+void BlogService::print_all_posts() {
+    std::cout << "\n═════════ Все посты в системе ═════════\n";
+    for (auto& user : user_repo->get_all_users()) {
+        auto& posts = user->get_blog().get_posts();
+        if (!posts.empty()) {
+            std::cout << "\n═════════ Посты пользователя " << user->get_username() << " ═════════\n";
+            for (const auto& post : posts) {
+                post.print();
+            }
+        }
+    }
+}
+
+bool BlogService::add_comment(const std::string& commenter, int post_index, const std::string& text) {
+    auto [author, index] = find_post(post_index);
+    if (author.empty()) return false;
+
+    if (auto user = user_repo->find_user(author)) {
+        auto& posts = user->get_blog().get_posts();
+        if (index >= 0 && static_cast<size_t>(index) < posts.size()) {
+            posts[index].add_comment(Comment(commenter, text));
             return true;
         }
-        return false;
     }
+    return false;
+}
 
-    void print_all_posts() {
-        cout << "\n═════════ Все посты в системе ═════════\n";
-        for (User* user : user_repo->get_all_users()) {
-            auto& posts = user->get_blog().get_posts();
-            if (!posts.empty()) { // Check if the user has any posts
-                cout << "\n═════════ Посты пользователя " << user->get_username() << " ═════════\n";
-                for (const auto& post : posts) {
-                    post.print();
-                }
-            }
+void BlogService::print_post_numbers() {
+    int counter = 1;
+    for (auto& user : user_repo->get_all_users()) {
+        for (const auto& post : user->get_blog().get_posts()) {
+            std::cout << counter++ << ". " << post.get_title()
+                      << " (" << user->get_username() << ")\n";
         }
     }
+}
 
-    bool add_comment(const string& commenter, int post_index, const string& text) {
-        auto [author, index] = find_post(post_index);
-        if (author.empty()) return false;
-
-        if (User* user = user_repo->find_user(author)) {
-            auto& posts = user->get_blog().get_posts();
-            if (index < posts.size()) {
-                posts[index].add_comment(Comment(commenter, text));
-                return true;
-            }
-        }
-        return false;
-    }
-
-    void print_post_numbers() {
-        int counter = 1;
-        for (User* user : user_repo->get_all_users()) {
-            for (const auto& post : user->get_blog().get_posts()) {
-                cout << counter++ << ". " << post.get_title()
-                     << " (" << user->get_username() << ")\n";
-            }
-        }
-    }
-};
-
-class UserFactory {
-    IUserRepository* repo;
-
-public:
-    explicit UserFactory(IUserRepository* repo) : repo(repo) {}
-
-    User* create_user(
-        const string& username,
-        const string& password,
-        const string& bio,
-        const vector<string>& interests
-    ) {
-        User* user = new User(username, password, Profile(bio, interests));
-        repo->add_user(user);
-        return user;
-    }
-};
-
+// BlogConsole.h
 class BlogConsole {
-    UserRepository* user_repo = new UserRepository();
-    AuthService* auth_service = new AuthService(user_repo);
-    BlogService* blog_service = new BlogService(user_repo);
-    User* current_user = nullptr;
-
-public: // Make the destructor public
-    ~BlogConsole() {
-        delete blog_service;
-        delete auth_service;
-        delete user_repo;
-    }
-
-    void print_main_menu() {
-        cout << "\n═════════ Блог-платформа ═════════\n"
-                "1. Регистрация\n"
-                "2. Вход\n"
-                "3. Просмотр всех постов\n"
-                "4. Выход\n"
-                "Выбор: ";
-    }
-
-    void handle_registration() {
-        string username, password, bio, input;
-        vector<string> interests;
-
-        cout << "\n═════════ Регистрация ═════════\nЛогин: ";
-        cin >> username;
-        cout << "Пароль: ";
-        cin >> password;
-
-        cin.ignore();
-        cout << "О себе: ";
-        getline(cin, bio);
-
-        cout << "Интересы (через запятую): ";
-        getline(cin, input);
-
-        istringstream iss(input);
-        while (getline(iss, input, ','))
-            interests.push_back(input.substr(0, input.find_first_not_of(" ")));
-
-        UserFactory factory(user_repo);
-        factory.create_user(username, password, bio, interests);
-        cout << "Регистрация успешна!\n";
-    }
-
-    void handle_login() {
-        string username, password;
-        cout << "\n═════════ Вход ═════════\nЛогин: ";
-        cin >> username;
-        cout << "Пароль: ";
-        cin >> password;
-
-        current_user = auth_service->authenticate(username, password);
-        if (current_user) user_session();
-        else cout << "Ошибка входа!\n";
-    }
-
-    void user_session() {
-        int choice;
-        do {
-            cout << "\n═════════ Личный кабинет ═════════\n"
-                    "1. Мой профиль\n"
-                    "2. Новый пост\n"
-                    "3. Мои посты\n"
-                    "4. Все посты\n"
-                    "5. Оставить комментарий\n"
-                    "6. Выход\n"
-                    "Выбор: ";
-            cin >> choice;
-            cin.ignore();
-
-            switch (choice) {
-                case 1: current_user->print_info(); break;
-                case 2: {
-                    string title, content;
-                    cout << "Заголовок: ";
-                    getline(cin, title);
-                    cout << "Текст поста:\n";
-                    getline(cin, content);
-                    blog_service->create_post(current_user->get_username(), title, content);
-                    cout << "Пост опубликован!\n";
-                    break;
-                }
-                case 3: current_user->get_blog().print_posts(); break;
-                case 4: blog_service->print_all_posts(); break;
-                case 5: {
-                    blog_service->print_post_numbers();
-                    cout << "Номер поста: ";
-                    int n; cin >> n; cin.ignore();
-                    cout << "Текст комментария: ";
-                    string text; getline(cin, text);
-                    cout << (blog_service->add_comment(current_user->get_username(), n, text)
-                              ? "Комментарий добавлен!\n" : "Ошибка!\n");
-                    break;
-                }
-            }
-        } while (choice != 6);
-    }
+    std::shared_ptr<UserRepository> user_repo;
+    std::shared_ptr<AuthService> auth_service;
+    std::shared_ptr<BlogService> blog_service;
+    std::shared_ptr<User> current_user;
 
 public:
-    BlogConsole() {
-        UserFactory factory(user_repo);
-        factory.create_user("admin", "admin", "Администратор", {"программирование"});
-        factory.create_user("user", "123", "Обычный пользователь", {"книги", "музыка"});
-    }
+    BlogConsole();
+    void run();
 
-    void run() {
-        int choice;
-        do {
-            print_main_menu();
-            cin >> choice;
-            cin.ignore();
-
-            switch (choice) {
-                case 1: handle_registration(); break;
-                case 2: handle_login(); break;
-                case 3: blog_service->print_all_posts(); break;
-            }
-        } while (choice != 4);
-    }
+private:
+    void print_main_menu();
+    void handle_registration();
+    void handle_login();
+    void user_session();
 };
 
+// BlogConsole.cpp
+BlogConsole::BlogConsole() {
+    user_repo = std::make_shared<UserRepository>();
+    auth_service = std::make_shared<AuthService>(user_repo);
+    blog_service = std::make_shared<BlogService>(user_repo);
+
+    UserFactory factory(user_repo);
+    factory.create_user("admin", "admin", "Администратор", {"программирование"});
+    factory.create_user("user", "123", "Обычный пользователь", {"книги", "музыка"});
+}
+
+void BlogConsole::print_main_menu() {
+    std::cout << "\n═════════ Блог-платформа ═════════\n"
+                 "1. Регистрация\n"
+                 "2. Вход\n"
+                 "3. Просмотр всех постов\n"
+                 "4. Выход\n"
+                 "Выбор: ";
+}
+
+void BlogConsole::handle_registration() {
+    std::string username, password, bio, input;
+    std::vector<std::string> interests;
+
+    std::cout << "\n═════════ Регистрация ═════════\nЛогин: ";
+    std::cin >> username;
+    std::cout << "Пароль: ";
+    std::cin >> password;
+
+    std::cin.ignore();
+    std::cout << "О себе: ";
+    std::getline(std::cin, bio);
+
+    std::cout << "Интересы (через запятую): ";
+    std::getline(std::cin, input);
+
+    std::istringstream iss(input);
+    while (std::getline(iss, input, ','))
+        interests.push_back(input.substr(0, input.find_first_not_of(" ")));
+
+    UserFactory factory(user_repo);
+    factory.create_user(username, password, bio, interests);
+    std::cout << "Регистрация успешна!\n";
+}
+
+void BlogConsole::handle_login() {
+    std::string username, password;
+    std::cout << "\n═════════ Вход ═════════\nЛогин: ";
+    std::cin >> username;
+    std::cout << "Пароль: ";
+    std::cin >> password;
+
+    current_user = auth_service->authenticate(username, password);
+    if (current_user) user_session();
+    else std::cout << "Ошибка входа!\n";
+}
+
+void BlogConsole::user_session() {
+    int choice;
+    do {
+        std::cout << "\n═════════ Личный кабинет ═════════\n"
+                     "1. Мой профиль\n"
+                     "2. Новый пост\n"
+                     "3. Мои посты\n"
+                     "4. Все посты\n"
+                     "5. Оставить комментарий\n"
+                     "6. Выход\n"
+                     "Выбор: ";
+        std::cin >> choice;
+        std::cin.ignore();
+
+        switch (choice) {
+            case 1: current_user->print_info(); break;
+            case 2: {
+                std::string title, content;
+                std::cout << "Заголовок: ";
+                std::getline(std::cin, title);
+                std::cout << "Текст поста:\n";
+                std::getline(std::cin, content);
+                blog_service->create_post(current_user->get_username(), title, content);
+                std::cout << "Пост опубликован!\n";
+                break;
+            }
+            case 3: current_user->get_blog().print_posts(); break;
+            case 4: blog_service->print_all_posts(); break;
+            case 5: {
+                blog_service->print_post_numbers();
+                std::cout << "Номер поста: ";
+                int n; std::cin >> n; std::cin.ignore();
+                std::cout << "Текст комментария: ";
+                std::string text; std::getline(std::cin, text);
+                std::cout << (blog_service->add_comment(current_user->get_username(), n, text)
+                          ? "Комментарий добавлен!\n" : "Ошибка!\n");
+                break;
+            }
+        }
+    } while (choice != 6);
+}
+
+void BlogConsole::run() {
+    int choice;
+    do {
+        print_main_menu();
+        std::cin >> choice;
+        std::cin.ignore();
+
+        switch (choice) {
+            case 1: handle_registration(); break;
+            case 2: handle_login(); break;
+            case 3: blog_service->print_all_posts(); break;
+        }
+    } while (choice != 4);
+}
+
+// main.cpp
 int main() {
     BlogConsole console;
     console.run();

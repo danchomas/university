@@ -1,0 +1,68 @@
+\begin{Verbatim}[commandchars=\\\{\}]
+\PYG{k+kn}{import} \PYG{n+nn}{numpy} \PYG{k}{as} \PYG{n+nn}{np}
+\PYG{k+kn}{from} \PYG{n+nn}{scipy.optimize} \PYG{k+kn}{import} \PYG{n}{linprog}
+
+
+\PYG{k}{def} \PYG{n+nf}{transform\PYGZus{}fractional\PYGZus{}problem}\PYG{p}{():}
+\PYG{+w}{	}\PYG{l+s+sd}{\PYGZdq{}\PYGZdq{}\PYGZdq{}Преобразование дробной задачи в линейную форму\PYGZdq{}\PYGZdq{}\PYGZdq{}}
+	\PYG{c+c1}{\PYGZsh{} Коэффициенты целевой функции и ограничений}
+	\PYG{n}{numerator\PYGZus{}coeff} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{9}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}  \PYG{c+c1}{\PYGZsh{} Числитель}
+	\PYG{n}{denominator\PYGZus{}coeff} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{]}  \PYG{c+c1}{\PYGZsh{} Знаменатель}
+
+	\PYG{c+c1}{\PYGZsh{} Матрица ограничений исходной задачи}
+	\PYG{n}{A\PYGZus{}orig} \PYG{o}{=} \PYG{p}{[}
+		\PYG{p}{[}\PYG{l+m+mi}{6}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{],}
+		\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{,} \PYG{l+m+mi}{3}\PYG{p}{,} \PYG{l+m+mi}{2}\PYG{p}{],}
+		\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{,} \PYG{l+m+mi}{4}\PYG{p}{,} \PYG{l+m+mi}{1}\PYG{p}{,} \PYG{l+m+mi}{0}\PYG{p}{]}
+	\PYG{p}{]}
+	\PYG{n}{b\PYGZus{}orig} \PYG{o}{=} \PYG{p}{[}\PYG{l+m+mi}{280}\PYG{p}{,} \PYG{l+m+mi}{70}\PYG{p}{,} \PYG{l+m+mi}{320}\PYG{p}{]}
+
+	\PYG{c+c1}{\PYGZsh{} Создание расширенной системы переменных [y1, y2, y3, y4, t]}
+	\PYG{n}{c} \PYG{o}{=} \PYG{n}{numerator\PYGZus{}coeff} \PYG{o}{+} \PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}  \PYG{c+c1}{\PYGZsh{} Целевая функция: 9y1 + 3y2 + 2y3 + y4}
+
+	\PYG{c+c1}{\PYGZsh{} Матрица ограничений для преобразованной задачи}
+	\PYG{n}{A\PYGZus{}eq} \PYG{o}{=} \PYG{p}{[]}
+	\PYG{n}{b\PYGZus{}eq} \PYG{o}{=} \PYG{p}{[]}
+
+	\PYG{c+c1}{\PYGZsh{} Добавление ограничений из исходной задачи}
+	\PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{n+nb}{len}\PYG{p}{(}\PYG{n}{A\PYGZus{}orig}\PYG{p}{)):}
+		\PYG{n}{row} \PYG{o}{=} \PYG{n}{A\PYGZus{}orig}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{+} \PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{n}{b\PYGZus{}orig}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]]}
+		\PYG{n}{A\PYGZus{}eq}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{row}\PYG{p}{)}
+		\PYG{n}{b\PYGZus{}eq}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{l+m+mi}{0}\PYG{p}{)}
+
+	\PYG{c+c1}{\PYGZsh{} Ограничение знаменателя: 2y1 + y2 + 3y3 + y4 = 1}
+	\PYG{n}{denom\PYGZus{}row} \PYG{o}{=} \PYG{n}{denominator\PYGZus{}coeff} \PYG{o}{+} \PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}
+	\PYG{n}{A\PYGZus{}eq}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{n}{denom\PYGZus{}row}\PYG{p}{)}
+	\PYG{n}{b\PYGZus{}eq}\PYG{o}{.}\PYG{n}{append}\PYG{p}{(}\PYG{l+m+mi}{1}\PYG{p}{)}
+
+	\PYG{c+c1}{\PYGZsh{} Решение расширенной задачи ЛП}
+	\PYG{n}{res} \PYG{o}{=} \PYG{n}{linprog}\PYG{p}{(}
+		\PYG{n}{c}\PYG{o}{=}\PYG{n}{c}\PYG{p}{,}
+		\PYG{n}{A\PYGZus{}eq}\PYG{o}{=}\PYG{n}{A\PYGZus{}eq}\PYG{p}{,}
+		\PYG{n}{b\PYGZus{}eq}\PYG{o}{=}\PYG{n}{b\PYGZus{}eq}\PYG{p}{,}
+		\PYG{n}{bounds}\PYG{o}{=}\PYG{p}{[(}\PYG{l+m+mi}{0}\PYG{p}{,} \PYG{k+kc}{None}\PYG{p}{)]} \PYG{o}{*} \PYG{l+m+mi}{5}\PYG{p}{,}
+		\PYG{n}{method}\PYG{o}{=}\PYG{l+s+s1}{\PYGZsq{}highs\PYGZsq{}}
+	\PYG{p}{)}
+
+	\PYG{k}{if} \PYG{n}{res}\PYG{o}{.}\PYG{n}{success}\PYG{p}{:}
+		\PYG{n}{t} \PYG{o}{=} \PYG{n}{res}\PYG{o}{.}\PYG{n}{x}\PYG{p}{[}\PYG{o}{\PYGZhy{}}\PYG{l+m+mi}{1}\PYG{p}{]}
+		\PYG{k}{if} \PYG{n}{t} \PYG{o}{\PYGZgt{}} \PYG{l+m+mf}{1e\PYGZhy{}8}\PYG{p}{:}
+			\PYG{n}{solution} \PYG{o}{=} \PYG{p}{[}\PYG{n}{res}\PYG{o}{.}\PYG{n}{x}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{/} \PYG{n}{t} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{)]}
+			\PYG{n}{z\PYGZus{}value} \PYG{o}{=} \PYG{n+nb}{sum}\PYG{p}{(}\PYG{n}{numerator\PYGZus{}coeff}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{*} \PYG{n}{solution}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{))} \PYG{o}{/} \PYG{n+nb}{sum}\PYG{p}{(}
+				\PYG{n}{denominator\PYGZus{}coeff}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{o}{*} \PYG{n}{solution}\PYG{p}{[}\PYG{n}{i}\PYG{p}{]} \PYG{k}{for} \PYG{n}{i} \PYG{o+ow}{in} \PYG{n+nb}{range}\PYG{p}{(}\PYG{l+m+mi}{4}\PYG{p}{))}
+
+			\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Оптимальное решение:\PYGZdq{}}\PYG{p}{)}
+			\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}x₁ = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{solution}\PYG{p}{[}\PYG{l+m+mi}{0}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+			\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}x₂ = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{solution}\PYG{p}{[}\PYG{l+m+mi}{1}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+			\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}x₃ = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{solution}\PYG{p}{[}\PYG{l+m+mi}{2}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+			\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}x₄ = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{solution}\PYG{p}{[}\PYG{l+m+mi}{3}\PYG{p}{]}\PYG{l+s+si}{:}\PYG{l+s+s2}{.2f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+			\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+sa}{f}\PYG{l+s+s2}{\PYGZdq{}Максимальное z = }\PYG{l+s+si}{\PYGZob{}}\PYG{n}{z\PYGZus{}value}\PYG{l+s+si}{:}\PYG{l+s+s2}{.4f}\PYG{l+s+si}{\PYGZcb{}}\PYG{l+s+s2}{\PYGZdq{}}\PYG{p}{)}
+		\PYG{k}{else}\PYG{p}{:}
+			\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Решение не соответствует условиям\PYGZdq{}}\PYG{p}{)}
+	\PYG{k}{else}\PYG{p}{:}
+		\PYG{n+nb}{print}\PYG{p}{(}\PYG{l+s+s2}{\PYGZdq{}Оптимальное решение не найдено\PYGZdq{}}\PYG{p}{)}
+
+
+\PYG{k}{if} \PYG{n+nv+vm}{\PYGZus{}\PYGZus{}name\PYGZus{}\PYGZus{}} \PYG{o}{==} \PYG{l+s+s2}{\PYGZdq{}\PYGZus{}\PYGZus{}main\PYGZus{}\PYGZus{}\PYGZdq{}}\PYG{p}{:}
+	\PYG{n}{transform\PYGZus{}fractional\PYGZus{}problem}\PYG{p}{()}
+\end{Verbatim}
