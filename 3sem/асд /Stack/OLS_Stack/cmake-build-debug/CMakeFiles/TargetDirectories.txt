@@ -1,3 +1,0 @@
-C:/Users/Admin/Desktop/RGZ_ASD/Stack/OLS_Stack/cmake-build-debug/CMakeFiles/Array_Stack.dir
-C:/Users/Admin/Desktop/RGZ_ASD/Stack/OLS_Stack/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Admin/Desktop/RGZ_ASD/Stack/OLS_Stack/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -1,3 +1,0 @@
-C:/Users/Admin/Desktop/RGZ_ASD/List/DLS/DF_DLS/cmake-build-debug/CMakeFiles/DF_OLS.dir
-C:/Users/Admin/Desktop/RGZ_ASD/List/DLS/DF_DLS/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Admin/Desktop/RGZ_ASD/List/DLS/DF_DLS/cmake-build-debug/CMakeFiles/rebuild_cache.dir

@@ -1,3 +1,0 @@
-C:/Users/Admin/Desktop/RGZ_ASD/Fifo/OLS_Fifo/cmake-build-debug/CMakeFiles/OLS_Fifo.dir
-C:/Users/Admin/Desktop/RGZ_ASD/Fifo/OLS_Fifo/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/Admin/Desktop/RGZ_ASD/Fifo/OLS_Fifo/cmake-build-debug/CMakeFiles/rebuild_cache.dir
