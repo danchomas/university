@@ -1,8 +1,0 @@
-﻿  jijka.cpp
-E:\4 сем\исслоп\Лаба 8\codiki\codiki\jijka.cpp(17,11): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-E:\4 сем\исслоп\Лаба 8\codiki\codiki\jijka.cpp(18,16): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-E:\4 сем\исслоп\Лаба 8\codiki\codiki\jijka.cpp(53,11): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-E:\4 сем\исслоп\Лаба 8\codiki\codiki\jijka.cpp(54,11): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-E:\4 сем\исслоп\Лаба 8\codiki\codiki\jijka.cpp(140,11): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-E:\4 сем\исслоп\Лаба 8\codiki\codiki\jijka.cpp(141,11): warning C4267: инициализация: преобразование из "size_t" в "int"; возможна потеря данных
-  codiki.vcxproj -> E:\4 сем\исслоп\Лаба 8\codiki\x64\Debug\codiki.exe
