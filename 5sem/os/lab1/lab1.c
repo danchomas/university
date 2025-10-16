@@ -2,31 +2,24 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
-#include <sys/wait.h>
-#include <time.h>
+#include <string.h>
 
-#define N 2                // общее число процессов (включая родителя)
-#define MAX_ROUNDS 3
+#define N 4                // общее число процессов (включая родителя)
 #define SIG_RING (SIGRTMIN + 1)
 
-static volatile sig_atomic_t current_round = 0;
-static pid_t *child_pids = NULL;
-static int num_children = 0;
+static pid_t g_original_parent = -1;   // PID исходного родителя
 static pid_t g_next_pid = -1;          // кому отправлять сигнал
-static pid_t g_original_parent = -1;   // PID родителя (для идентификации)
 
 void sigterm_handler(int signo) {
     exit(EXIT_SUCCESS);
 }
 
 void sigint_handler(int signo) {
-    // Родитель завершает всех потомков
-    for (int i = 0; i < num_children; ++i) {
-        if (child_pids[i] > 0) {
-            kill(child_pids[i], SIGTERM);
-        }
+    // Только исходный родитель обрабатывает SIGINT
+    if (getpid() == g_original_parent) {
+        printf("\n[Parent] Получен SIGINT. Завершение...\n");
+        exit(EXIT_SUCCESS);
     }
-    exit(EXIT_SUCCESS);
 }
 
 void ring_handler(int signo, siginfo_t *info, void *context) {
@@ -36,121 +29,123 @@ void ring_handler(int signo, siginfo_t *info, void *context) {
 
     printf("[PID=%d, PPID=%d] Получено: %d\n", (int)self, (int)parent, value);
 
-    if (self == g_original_parent) {
-        // Это родитель — он получил сигнал после полного круга
-        current_round++;
-        if (current_round < MAX_ROUNDS) {
-            printf("[Parent %d] Начинает раунд %d\n", (int)self, current_round);
-            const union sigval sv = {.sival_int = 0};
-            if (sigqueue(g_next_pid, SIG_RING, sv) == -1) {
-                perror("sigqueue (next round)");
-            }
-        } else {
-            // Завершаем всех
-            for (int i = 0; i < num_children; ++i) {
-                if (child_pids[i] > 0) {
-                    kill(child_pids[i], SIGTERM);
-                }
-            }
-            exit(EXIT_SUCCESS);
-        }
-    } else {
-        // Это потомок — просто передаём дальше
-        int new_value = value + 1;
-        const union sigval sv = {.sival_int = new_value};
-        if (sigqueue(g_next_pid, SIG_RING, sv) == -1) {
-            perror("sigqueue forward");
-            // Если ошибка — возможно, next уже мёртв → завершаемся
-            exit(EXIT_FAILURE);
-        }
+    // Увеличиваем значение
+    int new_value = value + 1;
+
+    // Отправляем дальше
+    const union sigval sv = {.sival_int = new_value};
+    if (sigqueue(g_next_pid, SIG_RING, sv) == -1) {
+        perror("sigqueue forward");
+        exit(EXIT_FAILURE);
     }
 }
 
-int main(void) {
+int main(int argc, char *argv[]) {
     setvbuf(stdout, NULL, _IONBF, 0);
-    srand(time(NULL));
 
-    g_original_parent = getpid();
-    num_children = N - 1;
-    child_pids = calloc(num_children, sizeof(pid_t));
-    if (!child_pids) {
-        perror("calloc");
-        exit(EXIT_FAILURE);
+    // Определяем PID исходного родителя
+    if (argc == 1) {
+        // Это исходный родитель
+        g_original_parent = getpid();
+    } else {
+        // Это потомок — получаем PID родителя из аргумента
+        g_original_parent = (pid_t)atol(argv[1]);
     }
 
-    // Установка обработчика SIGINT только у родителя
-    if (signal(SIGINT, sigint_handler) == SIG_ERR) {
-        perror("signal SIGINT");
-        exit(EXIT_FAILURE);
-    }
+    pid_t self_pid = getpid();
 
-    // Создаём всех потомков напрямую от родителя
-    pid_t current_next = g_original_parent; // последний потомок будет отправлять сюда
-
-    for (int i = N - 1; i >= 1; i--) {
-        pid_t pid = fork();
-        if (pid == -1) {
-            perror("fork");
-            exit(EXIT_FAILURE);
-        }
-        if (pid == 0) {
-            // Дочерний процесс
-            g_next_pid = current_next;
-            current_next = getpid();
-
-            // Установка обработчиков
-            struct sigaction sa = {0};
-            sa.sa_sigaction = ring_handler;
-            sa.sa_flags = SA_SIGINFO;
-            sigemptyset(&sa.sa_mask);
-            if (sigaction(SIG_RING, &sa, NULL) == -1) {
-                perror("sigaction child");
-                exit(EXIT_FAILURE);
-            }
-
-            if (signal(SIGTERM, sigterm_handler) == SIG_ERR) {
-                perror("signal SIGTERM");
-                exit(EXIT_FAILURE);
-            }
-
-            // Ждём сигналов ВЕЧНО
-            while (1) {
-                pause();
-            }
-        } else {
-            // Родитель: запоминаем PID потомка
-            child_pids[i - 1] = pid; // i от N-1 до 1 → индекс от N-2 до 0
-            current_next = pid;
-        }
-    }
-
-    // Родитель: первый в кольце — тот, кто был создан последним (current_next)
-    g_next_pid = current_next;
-
-    // Обработчик сигнала у родителя
+    // Устанавливаем обработчики сигналов
     struct sigaction sa = {0};
     sa.sa_sigaction = ring_handler;
     sa.sa_flags = SA_SIGINFO;
     sigemptyset(&sa.sa_mask);
     if (sigaction(SIG_RING, &sa, NULL) == -1) {
-        perror("sigaction parent");
+        perror("sigaction");
         exit(EXIT_FAILURE);
     }
 
-    sleep(1); // дать потомкам завершить инициализацию
-
-    printf("[Parent %d] Инициирует передачу числа 0 в кольцо.\n", (int)getpid());
-    const union sigval sv = {.sival_int = 0};
-    if (sigqueue(g_next_pid, SIG_RING, sv) == -1) {
-        perror("sigqueue init");
+    if (signal(SIGTERM, sigterm_handler) == SIG_ERR) {
+        perror("signal SIGTERM");
         exit(EXIT_FAILURE);
     }
 
-    // Родитель ждёт сигналов
+    // Только исходный родитель ловит SIGINT
+    if (self_pid == g_original_parent) {
+        if (signal(SIGINT, sigint_handler) == SIG_ERR) {
+            perror("signal SIGINT");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    // === ЦЕПОЧКА ПОРОЖДЕНИЯ ===
+    if (self_pid == g_original_parent) {
+        // Родитель: создаёт первого потомка, если N > 1
+        if (N > 1) {
+            char orig_pid_str[32];
+            snprintf(orig_pid_str, sizeof(orig_pid_str), "%ld", (long)g_original_parent);
+            pid_t first_child = fork();
+            if (first_child == -1) {
+                perror("fork");
+                exit(EXIT_FAILURE);
+            }
+            if (first_child == 0) {
+                execl(argv[0], argv[0], orig_pid_str, "1", NULL); // "1" = уровень/номер
+                perror("execl first child");
+                exit(EXIT_FAILURE);
+            }
+            g_next_pid = first_child;
+        } else {
+            // N == 1: кольцо из одного процесса (сам себе)
+            g_next_pid = g_original_parent;
+        }
+    } else {
+        // Это потомок. Определяем, сколько процессов уже создано.
+        // Мы передаём "глубину" через argv[2]: 1, 2, ..., N-1
+        int depth = (argc >= 3) ? atoi(argv[2]) : 1;
+
+        if (depth < N - 1) {
+            // Нужно создать следующего потомка
+            char orig_pid_str[32];
+            char next_depth_str[32];
+            snprintf(orig_pid_str, sizeof(orig_pid_str), "%ld", (long)g_original_parent);
+            snprintf(next_depth_str, sizeof(next_depth_str), "%d", depth + 1);
+
+            pid_t next_child = fork();
+            if (next_child == -1) {
+                perror("fork in child");
+                exit(EXIT_FAILURE);
+            }
+            if (next_child == 0) {
+                execl(argv[0], argv[0], orig_pid_str, next_depth_str, NULL);
+                perror("execl next child");
+                exit(EXIT_FAILURE);
+            }
+            g_next_pid = next_child;
+        } else {
+            // Это последний потомок (глубина = N-1)
+            // === ВОТ ЭТОТ МОМЕНТ — ЗАМЫКАНИЕ КОЛЬЦА ===
+            // Последний процесс в цепочке отправляет сигнал
+            // обратно исходному родителю, замыкая кольцо:
+            // ... → Потомок N-1 → Родитель → Потомок 1 → ...
+            // ===================================================
+            g_next_pid = g_original_parent;
+        }
+    }
+
+    // Инициация передачи: только исходный родитель
+    if (self_pid == g_original_parent) {
+        sleep(1); // дать потомкам завершить инициализацию
+        printf("[Parent %d] Инициирует передачу числа 0 в кольцо.\n", (int)self_pid);
+        const union sigval sv = {.sival_int = 0};
+        if (sigqueue(g_next_pid, SIG_RING, sv) == -1) {
+            perror("sigqueue init");
+            exit(EXIT_FAILURE);
+        }
+    }
+
     while (1) {
         pause();
     }
 
-    free(child_pids);
     return 0;
 }
