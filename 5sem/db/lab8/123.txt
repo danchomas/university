@@ -1,0 +1,59 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+INSERT INTO ContactDetails (FullName, Phone, Email, PassportData)
+SELECT
+    'User ' || i,
+    '+7' || (1000000000 + i)::text,
+    'user' || i || '@example.com',
+    (1000 + i)::text || ' ' || (100000 + i)::text
+FROM generate_series(1, 1000) AS i;
+
+INSERT INTO Passenger (ContactDetailsID)
+SELECT ID FROM ContactDetails;
+
+INSERT INTO Train (TrainNumber, TrainType) VALUES
+('T001', 'скорый'), ('T002', 'пассажирский'), ('T003', 'фирменный'), ('T004', 'скорый')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO Route (DepartureStation, ArrivalStation, Distance, DurationMinutes) VALUES
+('Москва', 'СПБ', 650, 240), ('Москва', 'Казань', 800, 500), ('Омск', 'Томск', 900, 600)
+ON CONFLICT DO NOTHING;
+
+INSERT INTO TicketStatus (StatusName) VALUES
+('активен'), ('возвращен'), ('забронирован')
+ON CONFLICT DO NOTHING;
+
+INSERT INTO Schedule (TrainID, RouteID, DepartureDateTime, ArrivalDateTime)
+SELECT
+    (SELECT ID FROM Train ORDER BY RANDOM() LIMIT 1),
+    (SELECT ID FROM Route ORDER BY RANDOM() LIMIT 1),
+    NOW() + (i || ' days')::interval,
+    NOW() + (i || ' days 5 hours')::interval
+FROM generate_series(1, 50) AS i;
+
+INSERT INTO Car (ScheduleID, CarNumber, CarType, TotalSeats)
+SELECT
+    s.ID,
+    c_num,
+    (ARRAY['плацкарт', 'купе', 'СВ'])[floor(random()*3)+1],
+    50
+FROM Schedule s
+CROSS JOIN generate_series(1, 5) AS c_num;
+
+INSERT INTO Seat (CarID, SeatNumber, SeatType)
+SELECT
+    c.ID,
+    s_num,
+    'сидячее' -- для простоты
+FROM Car c
+CROSS JOIN generate_series(1, 10) AS s_num;
+
+INSERT INTO Ticket (PassengerID, SeatID, StatusID, Price)
+SELECT
+    (SELECT ID FROM Passenger ORDER BY RANDOM() LIMIT 1),
+    s.ID,
+    (SELECT ID FROM TicketStatus ORDER BY RANDOM() LIMIT 1),
+    (random() * 5000 + 500)::numeric(10, 2)
+FROM Seat s
+ORDER BY RANDOM()
+LIMIT 1000;
